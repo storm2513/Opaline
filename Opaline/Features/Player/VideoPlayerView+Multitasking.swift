@@ -24,6 +24,41 @@ extension VideoPlayerView {
         return remaining < 0.5
     }
 
+    /// Every rate change goes through here: the background rule first, then
+    /// the multitasking resume.
+    /// `observed` is the player the change came from, which a queued change
+    /// can outlive as this view's `player` (rebuild, detach).
+    func rateChanged(to rate: Float, of observed: AVPlayer) {
+        if rate == 0, ScreenLockPause.shared.takePause(of: observed) {
+            return
+        }
+        if pauseIfPlayingInBackground(rate: rate) {
+            return
+        }
+        noteSystemPause(rate: rate)
+    }
+
+    /// With background playback off, nothing may play while the app is in
+    /// the background. The pause on entering it is not enough on its own:
+    /// recovery, a rebuilt item, autoplay and the remote all call `play()`
+    /// later, and with the screen locked that played audio nobody could see
+    /// coming. Catching the rate change covers every one of them. PiP is
+    /// the exception — that is the user watching.
+    private func pauseIfPlayingInBackground(rate: Float) -> Bool {
+        guard rate > 0,
+              !BackgroundPlaybackService.isEnabled,
+              !isPiPActive,
+              UIApplication.shared.applicationState == .background else {
+            return false
+        }
+        AppLog.player("playing in the background with background playback off, pausing")
+        // The play being undone may be the multitasking resume; left set,
+        // the flag would resume playback on the next activation.
+        multitaskPause.systemPaused = false
+        player?.pause()
+        return true
+    }
+
     /// A pause we did not ask for, while the app is on screen and active: iPad
     /// multitasking takes video away from an app the moment it stops being the
     /// frontmost one (dragged into Slide Over beside another app). Nothing

@@ -141,11 +141,7 @@ extension SettingsViewController {
             .autoplayEnabled, .autoplayMixEnabled
         ])
         return [
-            Section(
-                header: "settings.section.videoQuality".localized,
-                footer: nil,
-                rows: [.quality, .qualityCellular]
-            ),
+            qualitySection,
             Section(
                 header: nil,
                 footer: "settings.footer.playback".localized,

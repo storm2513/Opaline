@@ -49,6 +49,7 @@ extension LocalMediaServer {
         let old = listener
         switch old.state {
         case .cancelled, .failed:
+            old.cancel()
             listen(again: 0, generation: generation)
         default:
             old.stateUpdateHandler = { [weak self] state in
@@ -66,7 +67,6 @@ extension LocalMediaServer {
               let fresh = Self.makeListener(port: value) else {
             return
         }
-        listener = fresh
         fresh.stateUpdateHandler = { [weak self] state in
             switch state {
             case .ready:
@@ -79,6 +79,7 @@ extension LocalMediaServer {
                 }
             case .failed(let error):
                 AppLog.hls("local server: could not listen on :\(port) again: \(error)")
+                fresh.cancel()
             default:
                 break
             }
@@ -86,6 +87,10 @@ extension LocalMediaServer {
         fresh.newConnectionHandler = { [weak self] connection in
             self?.accept(connection)
         }
-        fresh.start(queue: queue)
+        // Started under stop()'s lock: a stop cannot slip in between and
+        // leave a cancelled listener to be started after all.
+        if !adopt(fresh, start: { fresh.start(queue: queue) }) {
+            fresh.stateUpdateHandler = nil
+        }
     }
 }

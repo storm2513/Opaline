@@ -84,8 +84,8 @@ final class WatchViewController: UIViewController {
     let sponsorBlock = SponsorBlockController()
     var autoplayOverlay: AutoplayOverlayView?
     let playbackFacade = PlaybackFacade()
-    var pageLoadToken = CancellationToken()
-    var isOuterScrollViewDragging = false, didSeekToSavedPosition = false, isLoadingQueuePage = false
+    var pageLoadToken = CancellationToken(), isLoadingQueuePage = false
+    var isOuterScrollViewDragging = false, didSeekToSavedPosition = false
     /// Source-reported: duration, and where the stream itself starts.
     var preparedDuration: Double?, itemStartsAt: Double?
     var captionTracks: [SubtitleTrack] = [], activeSubtitleLanguage: String?

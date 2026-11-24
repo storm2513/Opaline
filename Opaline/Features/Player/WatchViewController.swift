@@ -85,13 +85,12 @@ final class WatchViewController: UIViewController {
     var autoplayOverlay: AutoplayOverlayView?
     let playbackFacade = PlaybackFacade()
     var pageLoadToken = CancellationToken()
-    var isOuterScrollViewDragging = false, didSeekToSavedPosition = false
-    var isLoadingQueuePage = false
+    var isOuterScrollViewDragging = false, didSeekToSavedPosition = false, isLoadingQueuePage = false
     /// Source-reported: duration, and where the stream itself starts.
     var preparedDuration: Double?, itemStartsAt: Double?
     var captionTracks: [SubtitleTrack] = [], activeSubtitleLanguage: String?
-    var backgroundEnteredAt: Date?, savedPlayerForBackground: AVPlayer?, recoveryItem: AVPlayerItem?
-    var isRecoveringPlayback = false, hasSeenPlaybackError = false, recoverOnForeground = false
+    var backgroundEnteredAt: Date?, savedPlayerForBackground: AVPlayer?, recovery = RecoveryState()
+    var isRecoveringPlayback = false, hasSeenPlaybackError = false
     /// Frozen during a recovery seek: a fresh item's zeroed clock must not
     /// overwrite where the user actually was.
     var lastPlaybackPosition = 0.0, pendingRecoverySeek = false, pendingResumeSeek: CMTime?
@@ -279,6 +278,7 @@ final class WatchViewController: UIViewController {
             || navigationController?.isBeingDismissed == true
         if isDismissing {
             pageLoadToken.cancel()
+            recovery.token?.cancel()
             videoPlayerView?.player?.pause()
         }
     }

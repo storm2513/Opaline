@@ -34,7 +34,7 @@ extension VideoPlayerView {
         player = newPlayer
         removePlayerObservers()
         addPlayerObservers()
-        duration = 0
+        resetClock()
     }
 
     func detach() {
@@ -43,7 +43,7 @@ extension VideoPlayerView {
         clockResync.isStalled = false
         clockResync.workItem?.cancel()
         clockResync.workItem = nil
-        (isResumeSeeking, playerLayer.isHidden) = (false, false)
+        resetClockAndCover()
         playerLayer.player = nil
         (player, duration) = (nil, 0)  // the next item's gaps must not use this length
         hideSkipButton()
@@ -235,7 +235,7 @@ extension VideoPlayerView {
             DispatchQueue.main.async {
                 let secs = CMTimeGetSeconds(item.duration)
                 if secs.isFinite, secs > 0 {
-                    self?.duration = secs
+                    self?.applyDuration(secs)
                     self?.durationLabel.text = formatTime(
                         secs
                     )
@@ -254,10 +254,11 @@ extension VideoPlayerView {
     // MARK: - Progress
 
     func updateProgress(time: CMTime) {
+        let secs = CMTimeGetSeconds(time)
+        defer { if duration > 0 || isItemReady { onTimeUpdate?(secs) } }  // live: no duration
         guard duration > 0 else {
             return
         }
-        let secs = CMTimeGetSeconds(time)
         // The overlay is hidden most of the time, and while it is there is
         // nothing to redraw — but the observer still ticks 10x/sec to drive
         // SponsorBlock, subtitles and watchtime through `onTimeUpdate`, so
@@ -278,7 +279,6 @@ extension VideoPlayerView {
             setSeekBarProgress(seconds: secs)
             updateBuffer(at: time)
         }
-        onTimeUpdate?(secs)
     }
 
     private func updateBuffer(at time: CMTime) {

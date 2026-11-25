@@ -448,6 +448,7 @@ extension WatchViewController {
         didSeekToSavedPosition = false
         watchPage = nil
         applyChapters()
+        hasSeenPlaybackError = false
         isLoadingRelated = true
         allRelatedVideos = []
         visibleRelatedVideos = []

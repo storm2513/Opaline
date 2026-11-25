@@ -53,12 +53,7 @@ final class VideoRouter {
             return
         }
         if let panel {
-            // Already playing there: bring it up rather than start it over.
-            if !panel.watchVC.isAlreadyPlaying(video) {
-                panel.watchVC.requestAutoFullscreenIfEnabled(for: video)
-                panel.watchVC.loadVideo(video)
-            }
-            panel.expand(animated: true)
+            show(video, in: panel)
             return
         }
         guard let factory = watchViewControllerFactory else {
@@ -77,6 +72,16 @@ final class VideoRouter {
             return
         }
         tabBar.installPlayerPanel(newPanel)
+    }
+
+    /// The player is already up: load `video` there, unless it is what the
+    /// player plays already — then just bring it up rather than start over.
+    private func show(_ video: Video, in panel: PlayerPanelViewController) {
+        if !panel.watchVC.isAlreadyPlaying(video) {
+            panel.watchVC.requestAutoFullscreenIfEnabled(for: video)
+            panel.watchVC.loadVideo(video)
+        }
+        panel.expand(animated: true)
     }
 
     /// Opens a video known only by id — e.g. a `ytlite://` deep link or a

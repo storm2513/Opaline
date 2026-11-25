@@ -53,8 +53,11 @@ final class VideoRouter {
             return
         }
         if let panel {
-            panel.watchVC.requestAutoFullscreenIfEnabled(for: video)
-            panel.watchVC.loadVideo(video)
+            // Already playing there: bring it up rather than start it over.
+            if !panel.watchVC.isAlreadyPlaying(video) {
+                panel.watchVC.requestAutoFullscreenIfEnabled(for: video)
+                panel.watchVC.loadVideo(video)
+            }
             panel.expand(animated: true)
             return
         }
@@ -88,6 +91,14 @@ final class VideoRouter {
         isShort: Bool = false,
         playlistId: String? = nil
     ) {
+        if let panel, !isShort,
+           panel.watchVC.isAlreadyPlaying(Video(id: videoId, playlistId: playlistId)) {
+            if let seconds {
+                panel.watchVC.seek(toLinkTime: seconds)
+            }
+            panel.expand(animated: true)
+            return
+        }
         if let seconds {
             WatchProgressStore.shared.setLinkStart(
                 seconds: seconds, forVideoId: videoId

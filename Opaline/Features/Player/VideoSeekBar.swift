@@ -161,8 +161,10 @@ final class VideoSeekBar: UIControl {
     private func addTrackSubviews() {
         addSubview(trackView)
         addSubview(bufferView)
-        addSubview(segmentsView)
         addSubview(progressView)
+        // Over the played part, as on YouTube: underneath it, a segment
+        // vanished as soon as playback passed it.
+        addSubview(segmentsView)
         addSubview(chapterGapsView)
         addSubview(thumbView)
     }
